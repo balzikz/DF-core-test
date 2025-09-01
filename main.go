@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/df-mc/dragonfly/server"
+	"github.com/df-mc/dragonfly/server/cmd"
 	"github.com/df-mc/dragonfly/server/player"
-	"github.com/df-mc/dragonfly/server/player/chat"
+	"github.com/df-mc/dragonfly/server/world/healing"
 	"github.com/sirupsen/logrus"
-	"strings"
 )
 
 func main() {
@@ -14,38 +14,44 @@ func main() {
 	log.Formatter = &logrus.TextFormatter{ForceColors: true}
 	log.Level = logrus.InfoLevel
 
-	conf, err := server.DefaultConfig().Load()
-	if err != nil {
+	conf := server.DefaultConfig()
+	conf.Network.Address = ":19132"
+
+	srv := conf.New()
+
+	cmd.Register(cmd.New("heal", "Восстанавливает полное здоровье", nil, Heal{}))
+
+	if err := srv.Start(); err != nil {
 		log.Fatalln(err)
 	}
 
-	srv := server.New(&conf, log)
-	srv.Start()
-
 	for srv.Accept(func(p *player.Player) {
-		p.Message("§eДобро пожаловать на наш Dragonfly сервер!")
+		p.Message("§eДобро пожаловать на DF-core-test! Код обновлен и работает.")
 		p.Handle(NewPlayerHandler(p))
 	}) {
 	}
 }
 
-type PlayerHandler struct {
-	player.NopHandler
-	p                 *player.Player
+type Heal struct{}
+
+func (Heal) Run(src cmd.Source, output *cmd.Output) {
+	if p, ok := src.(*player.Player); ok {
+		p.Heal(p.MaxHealth(), healing.SourceCommand{})
+		output.Printf("§aВы были полностью исцелены!")
+	} else {
+		output.Errorf("Эту команду может использовать только игрок.")
+	}
 }
 
+type PlayerHandler struct {
+	player.NopHandler
+	p *player.Player
+}
 
 func NewPlayerHandler(p *player.Player) *PlayerHandler {
 	return &PlayerHandler{p: p}
 }
 
-func (h *PlayerHandler) HandleCommandExecution(commandLine *string) {
-	command := strings.Split(*commandLine, " ")[0]
-
-	if command == "heal" {
-		h.p.Heal(1000, "Исцеление командой /heal")
-		h.p.Message("§aВы были полностью исцелены!")
-		return
- }
-	h.p.Messagef("§cКоманда '%s' не найдена.", command)
+func (h *PlayerHandler) HandleQuit() {
+	fmt.Printf("Игрок %s покинул сервер.\n", h.p.Name())
 }
