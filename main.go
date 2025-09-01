@@ -5,7 +5,6 @@ import (
 	"github.com/df-mc/dragonfly/server"
 	"github.com/df-mc/dragonfly/server/cmd"
 	"github.com/df-mc/dragonfly/server/player"
-	"github.com/df-mc/dragonfly/server/world/healing"
 	"github.com/sirupsen/logrus"
 )
 
@@ -36,7 +35,7 @@ type Heal struct{}
 
 func (Heal) Run(src cmd.Source, output *cmd.Output) {
 	if p, ok := src.(*player.Player); ok {
-		p.Heal(p.MaxHealth(), healing.SourceCommand{})
+		p.Heal(p.MaxHealth(), nill{})
 		output.Printf("§aВы были полностью исцелены!")
 	} else {
 		output.Errorf("Эту команду может использовать только игрок.")
