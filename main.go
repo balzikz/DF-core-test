@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/df-mc/dragonfly/server"
+	"github.comcom/df-mc/dragonfly/server"
 	"github.com/df-mc/dragonfly/server/cmd"
 	"github.com/df-mc/dragonfly/server/player"
 	"github.com/df-mc/dragonfly/server/world"
@@ -14,20 +14,16 @@ func main() {
 	log.Formatter = &logrus.TextFormatter{ForceColors: true}
 	log.Level = logrus.InfoLevel
 
-	conf, err := server.LoadConfig(log)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	srv := server.New(&conf, log)
-
-	cmd.Register(cmd.New("heal", "Восстанавливает полное здоровье", nil, Heal{}))
-
+	config := server.DefaultConfig()
+	srv := server.New(&config, log)
 	if err := srv.Start(); err != nil {
 		log.Fatalln(err)
 	}
 
+	cmd.Register(cmd.New("heal", "Восстанавливает полное здоровье", nil, Heal{}))
+
 	for srv.Accept(func(p *player.Player) {
-		p.Message("§aДобро пожаловать! Финальная версия кода работает!")
+		p.Message("§aДобро пожаловать! Наконец-то правильная версия кода!")
 		p.Handle(NewPlayerHandler(p))
 	}) {
 	}
